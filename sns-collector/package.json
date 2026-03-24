@@ -1,0 +1,25 @@
+{
+  "name": "sns-collector",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node esbuild.config.mjs",
+    "build:x": "node esbuild.config.mjs --platform x",
+    "build:threads": "node esbuild.config.mjs --platform threads",
+    "build:all": "npm run build:x && npm run build:threads",
+    "build:watch": "node esbuild.config.mjs --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "tsc --noEmit",
+    "package": "npm run build && cd dist && zip -r ../sns-collector.zip .",
+    "dist": "npm run build:all && node scripts/make-dist.mjs"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.268",
+    "esbuild": "^0.20.0",
+    "jsdom": "^24.0.0",
+    "typescript": "^5.4.0",
+    "vitest": "^1.6.0"
+  }
+}

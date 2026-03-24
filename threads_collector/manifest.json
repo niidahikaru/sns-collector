@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "Threads投稿収集",
+  "version": "1.2",
+  "description": "Threadsの投稿を収集してGoogle スプレッドシートに送信",
+  "permissions": ["activeTab", "storage"],
+  "host_permissions": ["https://script.google.com/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Threads投稿収集"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.threads.net/*", "https://www.threads.com/*"],
+      "js": ["content.js"]
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+<!-- Synthetic fixture based on real X DOM structure (Japanese locale) -->
+<!-- Retweet - contains socialContext with repost indicator -->
+<article role="article" tabindex="0" data-testid="tweet">
+  <div>
+    <div>
+      <div data-testid="socialContext">
+        <span>testuserさんがリポスト</span>
+      </div>
+      <div data-testid="Tweet-User-Avatar">
+        <div data-testid="UserAvatar-Container-otheruser">
+          <a href="/otheruser" aria-hidden="true" role="link" tabindex="-1"></a>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div>
+        <div data-testid="User-Name">
+          <div>
+            <a href="/otheruser" role="link">
+              <div><div dir="ltr"><span><span>Other User</span></span></div></div>
+            </a>
+          </div>
+          <div>
+            <div>
+              <a href="/otheruser" role="link" tabindex="-1">
+                <div dir="ltr"><span>@otheruser</span></div>
+              </a>
+              <div dir="ltr" aria-hidden="true"><span>·</span></div>
+              <div>
+                <a href="/otheruser/status/2222222222222222222" dir="ltr" role="link">
+                  <time datetime="2026-01-18T16:00:00.000Z">1月18日</time>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div dir="auto" data-testid="tweetText">
+          <span>リポストされた投稿の内容</span>
+        </div>
+      </div>
+      <div>
+        <div aria-label="10 件の返信、50 件のリポスト、200 件のいいね、5 件のブックマーク、1000 件の表示" role="group">
+          <div><button aria-label="10 件の返信。返信する" data-testid="reply" type="button"><div><span data-testid="app-text-transition-container"><span><span>10</span></span></span></div></button></div>
+          <div><button aria-label="50 件のリポスト件。リポスト" data-testid="retweet" type="button"><div><span data-testid="app-text-transition-container"><span><span>50</span></span></span></div></button></div>
+          <div><button aria-label="200 件のいいね。いいねする" data-testid="like" type="button"><div><span data-testid="app-text-transition-container"><span><span>200</span></span></span></div></button></div>
+          <div><a href="/otheruser/status/2222222222222222222/analytics" aria-label="1000 件の表示。ポストアナリティクスを表示" role="link"><div><span data-testid="app-text-transition-container"><span><span>1,000</span></span></span></div></a></div>
+          <div><button aria-label="ブックマーク" data-testid="bookmark" type="button"></button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</article>

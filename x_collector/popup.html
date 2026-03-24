@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      width: 340px;
+      padding: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 14px;
+      color: #333;
+      background: #fafafa;
+    }
+    h1 {
+      font-size: 16px;
+      margin-bottom: 12px;
+      color: #0f1419;
+    }
+    .section {
+      margin-bottom: 14px;
+    }
+    label {
+      display: block;
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 4px;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+    }
+    input[type="text"]:focus {
+      border-color: #1d9bf0;
+    }
+    .btn-row {
+      display: flex;
+      gap: 8px;
+    }
+    button {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    button:hover {
+      opacity: 0.85;
+    }
+    button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    #btnStart {
+      background: #0f1419;
+      color: #fff;
+    }
+    #btnStop {
+      background: #f4212e;
+      color: #fff;
+    }
+    #status {
+      margin-top: 12px;
+      padding: 10px;
+      background: #f0f0f0;
+      border-radius: 6px;
+      font-size: 13px;
+      color: #555;
+      text-align: center;
+    }
+    .status-collecting {
+      background: #e3f2fd !important;
+      color: #1565c0 !important;
+    }
+    .status-error {
+      background: #ffebee !important;
+      color: #c62828 !important;
+    }
+    .status-success {
+      background: #e8f5e9 !important;
+      color: #2e7d32 !important;
+    }
+    .save-indicator {
+      font-size: 11px;
+      color: #00c853;
+      margin-top: 4px;
+      display: none;
+    }
+    .realtime-note {
+      font-size: 11px;
+      color: #888;
+      margin-top: 8px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>X投稿収集</h1>
+
+  <div class="section">
+    <label for="gasUrl">Google Apps Script URL</label>
+    <input type="text" id="gasUrl" placeholder="https://script.google.com/macros/s/...">
+    <div class="save-indicator" id="saveIndicator">保存しました</div>
+  </div>
+
+  <div class="btn-row">
+    <button id="btnStart">収集開始</button>
+    <button id="btnStop" disabled>収集停止</button>
+  </div>
+
+  <div id="status">待機中</div>
+  <div class="realtime-note">収集した投稿はリアルタイムでスプレッドシートに反映されます</div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

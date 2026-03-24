@@ -1,0 +1,54 @@
+<!-- Synthetic fixture based on real X DOM structure (Japanese locale) -->
+<!-- Reply tweet - contains "返信先" indicator -->
+<article role="article" tabindex="0" data-testid="tweet">
+  <div>
+    <div>
+      <div data-testid="Tweet-User-Avatar">
+        <div data-testid="UserAvatar-Container-testuser">
+          <a href="/testuser" aria-hidden="true" role="link" tabindex="-1"></a>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div>
+        <div data-testid="User-Name">
+          <div>
+            <a href="/testuser" role="link">
+              <div><div dir="ltr"><span><span>Test User</span></span></div></div>
+            </a>
+          </div>
+          <div>
+            <div>
+              <a href="/testuser" role="link" tabindex="-1">
+                <div dir="ltr"><span>@testuser</span></div>
+              </a>
+              <div dir="ltr" aria-hidden="true"><span>·</span></div>
+              <div>
+                <a href="/testuser/status/1111111111111111111" dir="ltr" role="link">
+                  <time datetime="2026-01-12T09:00:00.000Z">1月12日</time>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div dir="ltr"><span>返信先</span><a href="/someuser" role="link"><span>@someuser</span></a><span>さん</span></div>
+      </div>
+      <div>
+        <div dir="auto" data-testid="tweetText">
+          <span>これは返信ツイートです</span>
+        </div>
+      </div>
+      <div>
+        <div aria-label="0 件の返信、0 件のリポスト、1 件のいいね、0 件のブックマーク、10 件の表示" role="group">
+          <div><button aria-label="0 件の返信。返信する" data-testid="reply" type="button"></button></div>
+          <div><button aria-label="0 件のリポスト件。リポスト" data-testid="retweet" type="button"></button></div>
+          <div><button aria-label="1 件のいいね。いいねする" data-testid="like" type="button"><div><span data-testid="app-text-transition-container"><span><span>1</span></span></span></div></button></div>
+          <div><a href="/testuser/status/1111111111111111111/analytics" aria-label="10 件の表示。ポストアナリティクスを表示" role="link"><div><span data-testid="app-text-transition-container"><span><span>10</span></span></span></div></a></div>
+          <div><button aria-label="ブックマーク" data-testid="bookmark" type="button"></button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</article>
