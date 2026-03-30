@@ -61,6 +61,7 @@ export interface CollectionState {
   pendingCount: number;
   sentCount: number;
   seenCount: number;
+  filteredCount: number;
   username: string | null;
 }
 

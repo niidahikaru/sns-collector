@@ -3,17 +3,24 @@ import { cpSync, mkdirSync, writeFileSync } from 'fs';
 
 const isWatch = process.argv.includes('--watch');
 
-// --platform x | threads (省略時は従来通り両対応)
+// --platform x | threads (必須)
 const platformIdx = process.argv.indexOf('--platform');
 const platform = platformIdx !== -1 ? process.argv[platformIdx + 1] : null;
+
+if (!platform || !['x', 'threads'].includes(platform)) {
+  console.error('Error: --platform x または --platform threads を指定してください');
+  console.error('  npm run build:x       → dist-x/');
+  console.error('  npm run build:threads  → dist-threads/');
+  process.exit(1);
+}
 
 const platformNames = {
   x: 'X投稿収集',
   threads: 'Threads投稿収集',
 };
 
-const manifestName = platform ? platformNames[platform] : 'SNS投稿収集';
-const outDir = platform ? `dist-${platform}` : 'dist';
+const manifestName = platformNames[platform];
+const outDir = `dist-${platform}`;
 
 mkdirSync(outDir, { recursive: true });
 

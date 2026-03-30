@@ -9,10 +9,12 @@ export class Collector {
   private sender: Sender;
   private healthMonitor: RuntimeHealthMonitor;
 
+  private threshold: number;
   private isCollecting = false;
   private seenIds = new Set<string>();
   private pendingCount = 0;
   private sentCount = 0;
+  private filteredCount = 0;
   private scrollTimer: ReturnType<typeof setTimeout> | null = null;
   private observer: MutationObserver | null = null;
   private scanDebounceTimer: ReturnType<typeof setTimeout> | null = null;
@@ -29,11 +31,13 @@ export class Collector {
   constructor(
     adapter: PostAdapter,
     gasUrl: string,
+    threshold: number,
     onStateChange: (state: CollectionState) => void,
     onError: (message: string) => void,
     onWarning: (message: string) => void,
   ) {
     this.adapter = adapter;
+    this.threshold = threshold;
     this.onStateChange = onStateChange;
     this.onError = onError;
     this.onWarning = onWarning;
@@ -63,6 +67,7 @@ export class Collector {
     this.seenIds.clear();
     this.pendingCount = 0;
     this.sentCount = 0;
+    this.filteredCount = 0;
     this.sessionId = Date.now().toString(36) + Math.random().toString(36).substr(2, 6);
     this.currentUsername = this.adapter.getUsername();
 
@@ -124,6 +129,7 @@ export class Collector {
       pendingCount: this.pendingCount,
       sentCount: this.sentCount,
       seenCount: this.seenIds.size,
+      filteredCount: this.filteredCount,
       username: this.currentUsername,
     };
   }
@@ -145,6 +151,13 @@ export class Collector {
       if (this.seenIds.has(post.postId)) continue;
 
       this.seenIds.add(post.postId);
+
+      // 閾値フィルタリング: threshold > 0 の場合、いいね数が閾値未満の投稿をスキップ
+      if (this.threshold > 0 && post.likes.parsed !== null && post.likes.parsed < this.threshold) {
+        this.filteredCount++;
+        continue;
+      }
+
       newPosts.push(post);
     }
 

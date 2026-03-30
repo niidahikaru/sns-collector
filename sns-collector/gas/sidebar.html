@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html>
+<head>
+<base target="_top">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Google Sans', Arial, sans-serif;
+    font-size: 13px;
+    color: #202124;
+    padding: 16px;
+  }
+
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #5f6368;
+    margin-bottom: 4px;
+    margin-top: 16px;
+  }
+  label:first-child { margin-top: 0; }
+
+  input[type="text"],
+  textarea,
+  select {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #dadce0;
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+  }
+  input[type="text"]:focus,
+  textarea:focus,
+  select:focus {
+    border-color: #1a73e8;
+  }
+  textarea {
+    min-height: 70px;
+    resize: vertical;
+  }
+
+  .hint {
+    font-size: 11px;
+    color: #999;
+    margin-top: 2px;
+  }
+
+  .ref-post {
+    background: #f8f9fa;
+    border: 1px solid #e8eaed;
+    border-radius: 6px;
+    padding: 8px 10px;
+    margin-top: 6px;
+    font-size: 11px;
+    color: #5f6368;
+    line-height: 1.5;
+  }
+  .ref-post .ref-meta {
+    font-size: 10px;
+    color: #999;
+    margin-top: 4px;
+  }
+  .ref-empty {
+    color: #999;
+    font-style: italic;
+    margin-top: 6px;
+    font-size: 12px;
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 20px;
+  }
+  .btn {
+    padding: 8px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-primary {
+    background: #1a73e8;
+    color: #fff;
+    flex: 1;
+  }
+  .btn-primary:hover { background: #1557b0; }
+  .btn-primary:disabled {
+    background: #a8c7fa;
+    cursor: not-allowed;
+  }
+  .btn-secondary {
+    background: #f1f3f4;
+    color: #5f6368;
+  }
+  .btn-secondary:hover { background: #e8eaed; }
+
+  .result-area {
+    margin-top: 16px;
+    display: none;
+  }
+  .result-area .result-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #1a73e8;
+    margin-bottom: 6px;
+  }
+  .result-area .result-text {
+    background: #f8f9fa;
+    border: 1px solid #e8eaed;
+    border-radius: 6px;
+    padding: 10px;
+    font-size: 13px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  .error-text {
+    color: #c5221f;
+    font-size: 12px;
+    margin-top: 8px;
+  }
+
+  .loading {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    color: #1a73e8;
+    font-size: 13px;
+  }
+  .loading .spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #1a73e8;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+  <label>テーマ</label>
+  <input type="text" id="theme" placeholder="例: SNS集客、プロフィール設計">
+  <div class="hint">生成したい投稿のテーマを入力</div>
+
+  <label>ターゲット</label>
+  <input type="text" id="target" placeholder="例: 副業初心者、30代女性起業家">
+
+  <label>トーン</label>
+  <select id="tone">
+    <option value="カジュアル（タメ口）" selected>カジュアル（タメ口）</option>
+    <option value="丁寧語">丁寧語</option>
+    <option value="熱量高め">熱量高め</option>
+    <option value="淡々と">淡々と</option>
+  </select>
+
+  <label>参考にする投稿</label>
+  <div class="hint">当たり投稿シートで行を選択してからサイドバーを開くと、その投稿の構造が参考になります</div>
+  <div id="refPostArea"></div>
+
+  <label>追加の指示（任意）</label>
+  <textarea id="additionalInstructions" placeholder="例: 自分の体験を入れたい、最後は質問で終わりたい、500文字以内で"></textarea>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" id="btnGenerate" onclick="handleGenerate()">生成する</button>
+    <button class="btn btn-secondary" onclick="handleClear()">クリア</button>
+  </div>
+
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    生成中...
+  </div>
+
+  <div id="errorArea" class="error-text"></div>
+
+  <div class="result-area" id="resultArea">
+    <div class="result-label">生成結果</div>
+    <div class="result-text" id="resultText"></div>
+  </div>
+
+<script>
+  // 起動時に選択行の分析結果を取得
+  google.script.run
+    .withSuccessHandler(showRefPost)
+    .withFailureHandler(function() { showRefPost(null); })
+    .getSelectedPostAnalysis();
+
+  function showRefPost(data) {
+    var area = document.getElementById('refPostArea');
+    if (data && data.summary) {
+      area.innerHTML =
+        '<div class="ref-post">' +
+          escapeHtml(data.summary) +
+          '<div class="ref-meta">いいね ' + escapeHtml(data.likes) + '（選択中の投稿）</div>' +
+        '</div>';
+    } else {
+      area.innerHTML = '<div class="ref-empty">分析済みの行を選択してからサイドバーを開いてください</div>';
+    }
+  }
+
+  function handleGenerate() {
+    var theme = document.getElementById('theme').value.trim();
+    if (!theme) {
+      document.getElementById('errorArea').textContent = 'テーマを入力してください。';
+      return;
+    }
+
+    var params = {
+      theme: theme,
+      target: document.getElementById('target').value.trim(),
+      tone: document.getElementById('tone').value,
+      additionalInstructions: document.getElementById('additionalInstructions').value.trim()
+    };
+
+    document.getElementById('btnGenerate').disabled = true;
+    document.getElementById('loading').style.display = 'flex';
+    document.getElementById('errorArea').textContent = '';
+    document.getElementById('resultArea').style.display = 'none';
+
+    google.script.run
+      .withSuccessHandler(onGenerateSuccess)
+      .withFailureHandler(onGenerateError)
+      .generatePost(params);
+  }
+
+  function onGenerateSuccess(result) {
+    document.getElementById('btnGenerate').disabled = false;
+    document.getElementById('loading').style.display = 'none';
+
+    if (result.success) {
+      document.getElementById('resultText').textContent = result.text;
+      document.getElementById('resultArea').style.display = 'block';
+      document.getElementById('errorArea').textContent = '';
+    } else {
+      document.getElementById('errorArea').textContent = 'エラー: ' + (result.error || '不明なエラー');
+    }
+  }
+
+  function onGenerateError(error) {
+    document.getElementById('btnGenerate').disabled = false;
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('errorArea').textContent = 'エラー: ' + error.message;
+  }
+
+  function handleClear() {
+    document.getElementById('theme').value = '';
+    document.getElementById('target').value = '';
+    document.getElementById('tone').selectedIndex = 0;
+    document.getElementById('additionalInstructions').value = '';
+    document.getElementById('resultArea').style.display = 'none';
+    document.getElementById('errorArea').textContent = '';
+  }
+
+  function escapeHtml(text) {
+    var div = document.createElement('div');
+    div.textContent = text || '';
+    return div.innerHTML;
+  }
+</script>
+
+</body>
+</html>

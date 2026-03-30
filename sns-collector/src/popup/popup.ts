@@ -3,6 +3,7 @@ import type { Platform, CollectionState } from '../core/types';
 
 document.addEventListener('DOMContentLoaded', () => {
   const gasUrlInput = document.getElementById('gasUrl') as HTMLInputElement;
+  const thresholdInput = document.getElementById('threshold') as HTMLInputElement;
   const saveIndicator = document.getElementById('saveIndicator')!;
   const btnStart = document.getElementById('btnStart') as HTMLButtonElement;
   const btnStop = document.getElementById('btnStop') as HTMLButtonElement;
@@ -30,15 +31,19 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // Load GAS URL from storage
+    // Load GAS URL and threshold from storage
     const storageKey = `gasUrl_${currentPlatform}`;
-    chrome.storage.local.get([storageKey, 'gasUrl'], (result: Record<string, unknown>) => {
+    const thresholdKey = `threshold_${currentPlatform}`;
+    chrome.storage.local.get([storageKey, thresholdKey, 'gasUrl'], (result: Record<string, unknown>) => {
       if (result[storageKey]) {
         gasUrlInput.value = result[storageKey] as string;
       } else if (result['gasUrl'] && currentPlatform === 'threads') {
         // Migration: copy old gasUrl to platform-specific key
         gasUrlInput.value = result['gasUrl'] as string;
         chrome.storage.local.set({ [storageKey]: gasUrlInput.value });
+      }
+      if (result[thresholdKey] !== undefined) {
+        thresholdInput.value = String(result[thresholdKey]);
       }
     });
 
@@ -53,11 +58,28 @@ document.addEventListener('DOMContentLoaded', () => {
     saveTimeout = setTimeout(() => {
       if (currentPlatform) {
         chrome.storage.local.set({ [`gasUrl_${currentPlatform}`]: gasUrlInput.value.trim() });
-        saveIndicator.style.display = 'block';
-        setTimeout(() => { saveIndicator.style.display = 'none'; }, 1500);
+        showSaveIndicator();
       }
     }, 500);
   });
+
+  // Threshold auto-save on input
+  let thresholdSaveTimeout: ReturnType<typeof setTimeout> | null = null;
+  thresholdInput.addEventListener('input', () => {
+    if (thresholdSaveTimeout) clearTimeout(thresholdSaveTimeout);
+    thresholdSaveTimeout = setTimeout(() => {
+      if (currentPlatform) {
+        const value = Math.max(0, parseInt(thresholdInput.value) || 0);
+        chrome.storage.local.set({ [`threshold_${currentPlatform}`]: value });
+        showSaveIndicator();
+      }
+    }, 500);
+  });
+
+  function showSaveIndicator(): void {
+    saveIndicator.style.display = 'block';
+    setTimeout(() => { saveIndicator.style.display = 'none'; }, 1500);
+  }
 
   // Start collection
   btnStart.addEventListener('click', () => {
@@ -67,8 +89,9 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    const threshold = Math.max(0, parseInt(thresholdInput.value) || 0);
     healthAlert.style.display = 'none';
-    sendToContent({ type: 'START_COLLECTING', gasUrl }, (response) => {
+    sendToContent({ type: 'START_COLLECTING', gasUrl, threshold }, (response) => {
       if (response?.success) {
         btnStart.disabled = true;
         btnStop.disabled = false;
@@ -97,7 +120,8 @@ document.addEventListener('DOMContentLoaded', () => {
       case 'UPDATE_COUNT': {
         const state = message as CollectionState;
         if (state.isCollecting) {
-          setStatus(`収集中... ${state.seenCount}件取得（${state.sentCount}件送信済み）`, 'status-collecting');
+          const filterInfo = state.filteredCount > 0 ? `、${state.filteredCount}件除外` : '';
+          setStatus(`収集中... ${state.seenCount}件取得（${state.sentCount}件送信済み${filterInfo}）`, 'status-collecting');
         }
         break;
       }
@@ -129,7 +153,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (state.isCollecting) {
         btnStart.disabled = true;
         btnStop.disabled = false;
-        setStatus(`収集中... ${state.seenCount}件取得（${state.sentCount}件送信済み）`, 'status-collecting');
+        const filterInfo = state.filteredCount > 0 ? `、${state.filteredCount}件除外` : '';
+        setStatus(`収集中... ${state.seenCount}件取得（${state.sentCount}件送信済み${filterInfo}）`, 'status-collecting');
       } else if (state.seenCount > 0) {
         btnStart.disabled = false;
         btnStop.disabled = true;

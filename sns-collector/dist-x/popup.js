@@ -13,6 +13,7 @@
   // src/popup/popup.ts
   document.addEventListener("DOMContentLoaded", () => {
     const gasUrlInput = document.getElementById("gasUrl");
+    const thresholdInput = document.getElementById("threshold");
     const saveIndicator = document.getElementById("saveIndicator");
     const btnStart = document.getElementById("btnStart");
     const btnStop = document.getElementById("btnStop");
@@ -37,12 +38,16 @@
         return;
       }
       const storageKey = `gasUrl_${currentPlatform}`;
-      chrome.storage.local.get([storageKey, "gasUrl"], (result) => {
+      const thresholdKey = `threshold_${currentPlatform}`;
+      chrome.storage.local.get([storageKey, thresholdKey, "gasUrl"], (result) => {
         if (result[storageKey]) {
           gasUrlInput.value = result[storageKey];
         } else if (result["gasUrl"] && currentPlatform === "threads") {
           gasUrlInput.value = result["gasUrl"];
           chrome.storage.local.set({ [storageKey]: gasUrlInput.value });
+        }
+        if (result[thresholdKey] !== void 0) {
+          thresholdInput.value = String(result[thresholdKey]);
         }
       });
       refreshStatus();
@@ -55,21 +60,37 @@
       saveTimeout = setTimeout(() => {
         if (currentPlatform) {
           chrome.storage.local.set({ [`gasUrl_${currentPlatform}`]: gasUrlInput.value.trim() });
-          saveIndicator.style.display = "block";
-          setTimeout(() => {
-            saveIndicator.style.display = "none";
-          }, 1500);
+          showSaveIndicator();
         }
       }, 500);
     });
+    let thresholdSaveTimeout = null;
+    thresholdInput.addEventListener("input", () => {
+      if (thresholdSaveTimeout)
+        clearTimeout(thresholdSaveTimeout);
+      thresholdSaveTimeout = setTimeout(() => {
+        if (currentPlatform) {
+          const value = Math.max(0, parseInt(thresholdInput.value) || 0);
+          chrome.storage.local.set({ [`threshold_${currentPlatform}`]: value });
+          showSaveIndicator();
+        }
+      }, 500);
+    });
+    function showSaveIndicator() {
+      saveIndicator.style.display = "block";
+      setTimeout(() => {
+        saveIndicator.style.display = "none";
+      }, 1500);
+    }
     btnStart.addEventListener("click", () => {
       const gasUrl = gasUrlInput.value.trim();
       if (!isValidGasUrl(gasUrl)) {
         setStatus("GAS URL\u3092\u5165\u529B\u3057\u3066\u304F\u3060\u3055\u3044\u3002", "status-error");
         return;
       }
+      const threshold = Math.max(0, parseInt(thresholdInput.value) || 0);
       healthAlert.style.display = "none";
-      sendToContent({ type: "START_COLLECTING", gasUrl }, (response) => {
+      sendToContent({ type: "START_COLLECTING", gasUrl, threshold }, (response) => {
         if (response?.success) {
           btnStart.disabled = true;
           btnStop.disabled = false;
@@ -94,7 +115,8 @@
         case "UPDATE_COUNT": {
           const state = message;
           if (state.isCollecting) {
-            setStatus(`\u53CE\u96C6\u4E2D... ${state.seenCount}\u4EF6\u53D6\u5F97\uFF08${state.sentCount}\u4EF6\u9001\u4FE1\u6E08\u307F\uFF09`, "status-collecting");
+            const filterInfo = state.filteredCount > 0 ? `\u3001${state.filteredCount}\u4EF6\u9664\u5916` : "";
+            setStatus(`\u53CE\u96C6\u4E2D... ${state.seenCount}\u4EF6\u53D6\u5F97\uFF08${state.sentCount}\u4EF6\u9001\u4FE1\u6E08\u307F${filterInfo}\uFF09`, "status-collecting");
           }
           break;
         }
@@ -126,7 +148,8 @@
         if (state.isCollecting) {
           btnStart.disabled = true;
           btnStop.disabled = false;
-          setStatus(`\u53CE\u96C6\u4E2D... ${state.seenCount}\u4EF6\u53D6\u5F97\uFF08${state.sentCount}\u4EF6\u9001\u4FE1\u6E08\u307F\uFF09`, "status-collecting");
+          const filterInfo = state.filteredCount > 0 ? `\u3001${state.filteredCount}\u4EF6\u9664\u5916` : "";
+          setStatus(`\u53CE\u96C6\u4E2D... ${state.seenCount}\u4EF6\u53D6\u5F97\uFF08${state.sentCount}\u4EF6\u9001\u4FE1\u6E08\u307F${filterInfo}\uFF09`, "status-collecting");
         } else if (state.seenCount > 0) {
           btnStart.disabled = false;
           btnStop.disabled = true;

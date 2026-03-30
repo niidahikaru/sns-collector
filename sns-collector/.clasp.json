@@ -1,7 +1,7 @@
 {
-  "scriptId": "1AuQ72ul4hKKl7wu4wi2O9e9LO1B7JhH_pvho6Ukwgg1Y_JxI_8OcEpwg",
-  "rootDir": "../../../../../tmp/clasp-test-dySDrc",
-  "parentId": "1xeQNCd--m4mp8YdSOh1R3DCNiFD6tiq1KYfXSbWFMWc",
+  "scriptId": "1cN7siz-VEIfwyC5M9MRzbd1bS8YAqISAr1_4M-50gmum4f_MfAHHJCjq",
+  "rootDir": "gas",
+  "parentId": "1WdDy0s86Rj5euWKVhvPWPE3PzpK0wmyreH5Fiw6ETqo",
   "scriptExtensions": [
     ".js",
     ".gs"

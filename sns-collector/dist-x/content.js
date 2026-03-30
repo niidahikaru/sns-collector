@@ -753,10 +753,12 @@
     adapter;
     sender;
     healthMonitor;
+    threshold;
     isCollecting = false;
     seenIds = /* @__PURE__ */ new Set();
     pendingCount = 0;
     sentCount = 0;
+    filteredCount = 0;
     scrollTimer = null;
     observer = null;
     scanDebounceTimer = null;
@@ -767,8 +769,9 @@
     onStateChange;
     onError;
     onWarning;
-    constructor(adapter, gasUrl, onStateChange, onError, onWarning) {
+    constructor(adapter, gasUrl, threshold, onStateChange, onError, onWarning) {
       this.adapter = adapter;
+      this.threshold = threshold;
       this.onStateChange = onStateChange;
       this.onError = onError;
       this.onWarning = onWarning;
@@ -793,6 +796,7 @@
       this.seenIds.clear();
       this.pendingCount = 0;
       this.sentCount = 0;
+      this.filteredCount = 0;
       this.sessionId = Date.now().toString(36) + Math.random().toString(36).substr(2, 6);
       this.currentUsername = this.adapter.getUsername();
       try {
@@ -849,6 +853,7 @@
         pendingCount: this.pendingCount,
         sentCount: this.sentCount,
         seenCount: this.seenIds.size,
+        filteredCount: this.filteredCount,
         username: this.currentUsername
       };
     }
@@ -870,6 +875,10 @@
         if (this.seenIds.has(post.postId))
           continue;
         this.seenIds.add(post.postId);
+        if (this.threshold > 0 && post.likes.parsed !== null && post.likes.parsed < this.threshold) {
+          this.filteredCount++;
+          continue;
+        }
         newPosts.push(post);
       }
       if (newPosts.length > 0) {
@@ -970,9 +979,11 @@
             sendResponse({ success: true, ...collector.getState() });
             break;
           }
+          const threshold = typeof message.threshold === "number" ? message.threshold : 0;
           collector = new Collector(
             adapter,
             message.gasUrl,
+            threshold,
             notifyPopup,
             notifyError,
             notifyWarning
@@ -1008,6 +1019,7 @@
               pendingCount: 0,
               sentCount: 0,
               seenCount: 0,
+              filteredCount: 0,
               username: adapter.getUsername()
             });
           }

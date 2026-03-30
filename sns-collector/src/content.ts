@@ -53,9 +53,11 @@ if (platform) {
           break;
         }
 
+        const threshold = typeof message.threshold === 'number' ? message.threshold : 0;
         collector = new Collector(
           adapter,
           message.gasUrl,
+          threshold,
           notifyPopup,
           notifyError,
           notifyWarning,
@@ -94,6 +96,7 @@ if (platform) {
             pendingCount: 0,
             sentCount: 0,
             seenCount: 0,
+            filteredCount: 0,
             username: adapter.getUsername(),
           } satisfies CollectionState);
         }
