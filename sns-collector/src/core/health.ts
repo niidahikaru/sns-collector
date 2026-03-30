@@ -33,7 +33,7 @@ export function preCollectionCheck(adapter: PostAdapter): HealthCheckResult {
   const errors: string[] = [];
   let samplePost: RawPost | null = null;
 
-  for (let i = 0; i < Math.min(elements.length, 5); i++) {
+  for (let i = 0; i < Math.min(elements.length, 25); i++) {
     const el = elements[i]!;
     if (!adapter.isOwnPost(el, username)) continue;
 
