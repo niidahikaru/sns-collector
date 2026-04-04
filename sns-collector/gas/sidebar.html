@@ -11,19 +11,75 @@
     padding: 16px;
   }
 
+  /* Steps indicator */
+  .steps {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+  .step-dot {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: #e8eaed;
+    color: #5f6368;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600;
+  }
+  .step-dot.active { background: #1a73e8; color: #fff; }
+  .step-dot.done { background: #34a853; color: #fff; }
+  .step-line { width: 24px; height: 2px; background: #e8eaed; }
+  .step-line.done { background: #34a853; }
+
+  .step-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #202124;
+    margin-bottom: 12px;
+  }
+
+  /* Panels */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* Post preview */
+  .post-preview {
+    background: #f8f9fa;
+    border: 1px solid #e8eaed;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 13px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    max-height: 200px;
+    overflow-y: auto;
+    margin-bottom: 8px;
+  }
+  .post-meta {
+    font-size: 11px;
+    color: #999;
+    margin-bottom: 12px;
+  }
+  .post-empty {
+    color: #999;
+    font-style: italic;
+    padding: 20px;
+    text-align: center;
+  }
+
+  /* Form elements */
   label {
     display: block;
     font-size: 12px;
     font-weight: 600;
     color: #5f6368;
     margin-bottom: 4px;
-    margin-top: 16px;
+    margin-top: 12px;
   }
   label:first-child { margin-top: 0; }
 
-  input[type="text"],
-  textarea,
-  select {
+  textarea {
     width: 100%;
     padding: 8px 10px;
     border: 1px solid #dadce0;
@@ -31,233 +87,339 @@
     font-size: 13px;
     font-family: inherit;
     outline: none;
-  }
-  input[type="text"]:focus,
-  textarea:focus,
-  select:focus {
-    border-color: #1a73e8;
-  }
-  textarea {
-    min-height: 70px;
+    min-height: 40px;
     resize: vertical;
   }
+  textarea:focus { border-color: #1a73e8; }
+  textarea.instruction { min-height: 60px; }
 
-  .hint {
-    font-size: 11px;
-    color: #999;
-    margin-top: 2px;
-  }
-
-  .ref-post {
-    background: #f8f9fa;
-    border: 1px solid #e8eaed;
+  .extra-item {
+    margin-top: 10px;
+    padding: 8px;
+    background: #fef7e0;
     border-radius: 6px;
-    padding: 8px 10px;
-    margin-top: 6px;
+  }
+  .extra-name {
     font-size: 11px;
-    color: #5f6368;
-    line-height: 1.5;
-  }
-  .ref-post .ref-meta {
-    font-size: 10px;
-    color: #999;
-    margin-top: 4px;
-  }
-  .ref-empty {
-    color: #999;
-    font-style: italic;
-    margin-top: 6px;
-    font-size: 12px;
+    font-weight: 600;
+    color: #b06000;
+    margin-bottom: 4px;
   }
 
+  /* Buttons */
   .btn-row {
     display: flex;
     gap: 8px;
-    margin-top: 20px;
+    margin-top: 16px;
   }
   .btn {
-    padding: 8px 20px;
+    padding: 8px 16px;
     border: none;
     border-radius: 6px;
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
-  }
-  .btn-primary {
-    background: #1a73e8;
-    color: #fff;
     flex: 1;
+    text-align: center;
   }
+  .btn-primary { background: #1a73e8; color: #fff; }
   .btn-primary:hover { background: #1557b0; }
-  .btn-primary:disabled {
-    background: #a8c7fa;
-    cursor: not-allowed;
-  }
-  .btn-secondary {
-    background: #f1f3f4;
-    color: #5f6368;
-  }
+  .btn-primary:disabled { background: #a8c7fa; cursor: not-allowed; }
+  .btn-secondary { background: #f1f3f4; color: #5f6368; flex: 0; white-space: nowrap; }
   .btn-secondary:hover { background: #e8eaed; }
+  .btn-success { background: #34a853; color: #fff; }
+  .btn-success:hover { background: #2d8f47; }
 
-  .result-area {
-    margin-top: 16px;
-    display: none;
-  }
-  .result-area .result-label {
-    font-size: 12px;
-    font-weight: 600;
-    color: #1a73e8;
-    margin-bottom: 6px;
-  }
-  .result-area .result-text {
+  /* Result */
+  .result-text {
     background: #f8f9fa;
     border: 1px solid #e8eaed;
-    border-radius: 6px;
-    padding: 10px;
+    border-radius: 8px;
+    padding: 12px;
     font-size: 13px;
-    line-height: 1.6;
+    line-height: 1.7;
     white-space: pre-wrap;
     max-height: 300px;
     overflow-y: auto;
   }
 
-  .error-text {
-    color: #c5221f;
-    font-size: 12px;
-    margin-top: 8px;
-  }
-
+  /* Loading & error */
   .loading {
     display: none;
     align-items: center;
+    justify-content: center;
     gap: 8px;
     margin-top: 12px;
     color: #1a73e8;
     font-size: 13px;
   }
   .loading .spinner {
-    width: 16px;
-    height: 16px;
+    width: 16px; height: 16px;
     border: 2px solid #1a73e8;
     border-top-color: transparent;
     border-radius: 50%;
     animation: spin 1s linear infinite;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
+
+  .error-text {
+    color: #c5221f;
+    font-size: 12px;
+    margin-top: 8px;
+  }
+  .saved-text {
+    color: #34a853;
+    font-size: 12px;
+    margin-top: 8px;
+    font-weight: 600;
+  }
 </style>
 </head>
 <body>
 
-  <label>テーマ</label>
-  <input type="text" id="theme" placeholder="例: SNS集客、プロフィール設計">
-  <div class="hint">生成したい投稿のテーマを入力</div>
+<!-- Steps indicator -->
+<div class="steps" id="stepsIndicator">
+  <div class="step-dot active" id="dot1">1</div>
+  <div class="step-line" id="line1"></div>
+  <div class="step-dot" id="dot2">2</div>
+  <div class="step-line" id="line2"></div>
+  <div class="step-dot" id="dot3">3</div>
+</div>
 
-  <label>ターゲット</label>
-  <input type="text" id="target" placeholder="例: 副業初心者、30代女性起業家">
+<!-- Step 1: Select post -->
+<div class="panel active" id="panel1">
+  <div class="step-title">ベースの型を選ぶ</div>
+  <div id="postPreviewArea"></div>
+  <div class="btn-row">
+    <button class="btn btn-primary" id="btnAnalyze" onclick="handleAnalyze()">型を分析する</button>
+  </div>
+  <div class="loading" id="loading1">
+    <div class="spinner"></div>
+    分析中...
+  </div>
+  <div id="error1" class="error-text"></div>
+</div>
 
-  <label>トーン</label>
-  <select id="tone">
-    <option value="カジュアル（タメ口）" selected>カジュアル（タメ口）</option>
-    <option value="丁寧語">丁寧語</option>
-    <option value="熱量高め">熱量高め</option>
-    <option value="淡々と">淡々と</option>
-  </select>
+<!-- Step 2: Review structure & generate -->
+<div class="panel" id="panel2">
+  <div class="step-title">構造を確認・編集</div>
+  <div id="structureFields"></div>
 
-  <label>参考にする投稿</label>
-  <div class="hint">当たり投稿シートで行を選択してからサイドバーを開くと、その投稿の構造が参考になります</div>
-  <div id="refPostArea"></div>
-
-  <label>追加の指示（任意）</label>
-  <textarea id="additionalInstructions" placeholder="例: 自分の体験を入れたい、最後は質問で終わりたい、500文字以内で"></textarea>
+  <label style="margin-top:16px;">追加の指示（任意）</label>
+  <textarea id="additionalInstructions" class="instruction" placeholder="例: 占いジャンルで書きたい、絵文字を多めに、500文字以内で"></textarea>
 
   <div class="btn-row">
+    <button class="btn btn-secondary" onclick="goToStep(1)">戻る</button>
     <button class="btn btn-primary" id="btnGenerate" onclick="handleGenerate()">生成する</button>
-    <button class="btn btn-secondary" onclick="handleClear()">クリア</button>
   </div>
-
-  <div class="loading" id="loading">
+  <div class="loading" id="loading2">
     <div class="spinner"></div>
     生成中...
   </div>
+  <div id="error2" class="error-text"></div>
+</div>
 
-  <div id="errorArea" class="error-text"></div>
-
-  <div class="result-area" id="resultArea">
-    <div class="result-label">生成結果</div>
-    <div class="result-text" id="resultText"></div>
+<!-- Step 3: Result -->
+<div class="panel" id="panel3">
+  <div class="step-title">生成結果</div>
+  <div class="result-text" id="resultText"></div>
+  <div id="savedMsg" class="saved-text" style="display:none;"></div>
+  <div id="error3" class="error-text"></div>
+  <div class="btn-row">
+    <button class="btn btn-success" id="btnSave" onclick="handleSave()">シートに保存</button>
   </div>
+  <div class="btn-row">
+    <button class="btn btn-secondary" onclick="goToStep(2)" style="flex:1;">再生成する</button>
+    <button class="btn btn-secondary" onclick="restart()" style="flex:1;">最初から</button>
+  </div>
+</div>
 
 <script>
-  // 起動時に選択行の分析結果を取得
-  google.script.run
-    .withSuccessHandler(showRefPost)
-    .withFailureHandler(function() { showRefPost(null); })
-    .getSelectedPostAnalysis();
+  var currentStep = 1;
+  var postText = '';
+  var structure = null;
 
-  function showRefPost(data) {
-    var area = document.getElementById('refPostArea');
-    if (data && data.summary) {
+  // Init: load selected post
+  google.script.run
+    .withSuccessHandler(showPost)
+    .withFailureHandler(function() { showPost(null); })
+    .getSelectedPostText();
+
+  function showPost(data) {
+    var area = document.getElementById('postPreviewArea');
+    if (data && data.text) {
+      postText = data.text;
       area.innerHTML =
-        '<div class="ref-post">' +
-          escapeHtml(data.summary) +
-          '<div class="ref-meta">いいね ' + escapeHtml(data.likes) + '（選択中の投稿）</div>' +
-        '</div>';
+        '<div class="post-preview">' + escapeHtml(data.text) + '</div>' +
+        (data.likes ? '<div class="post-meta">いいね ' + escapeHtml(data.likes) + '</div>' : '');
+      document.getElementById('btnAnalyze').disabled = false;
     } else {
-      area.innerHTML = '<div class="ref-empty">分析済みの行を選択してからサイドバーを開いてください</div>';
+      area.innerHTML = '<div class="post-empty">シートで投稿がある行を選択してから<br>サイドバーを開いてください</div>';
+      document.getElementById('btnAnalyze').disabled = true;
     }
   }
 
-  function handleGenerate() {
-    var theme = document.getElementById('theme').value.trim();
-    if (!theme) {
-      document.getElementById('errorArea').textContent = 'テーマを入力してください。';
-      return;
+  function handleAnalyze() {
+    if (!postText) return;
+    document.getElementById('btnAnalyze').disabled = true;
+    document.getElementById('loading1').style.display = 'flex';
+    document.getElementById('error1').textContent = '';
+
+    google.script.run
+      .withSuccessHandler(onAnalyzeSuccess)
+      .withFailureHandler(onAnalyzeError)
+      .analyzePostStructure(postText);
+  }
+
+  function onAnalyzeSuccess(result) {
+    document.getElementById('loading1').style.display = 'none';
+    document.getElementById('btnAnalyze').disabled = false;
+    structure = result;
+    renderStructureFields(result);
+    goToStep(2);
+  }
+
+  function onAnalyzeError(error) {
+    document.getElementById('loading1').style.display = 'none';
+    document.getElementById('btnAnalyze').disabled = false;
+    document.getElementById('error1').textContent = 'エラー: ' + error.message;
+  }
+
+  function renderStructureFields(s) {
+    var container = document.getElementById('structureFields');
+    var categories = [
+      { key: 'hook', label: '冒頭フック' },
+      { key: 'appeal', label: '訴求（理想の未来）' },
+      { key: 'scarcity', label: '限定性' },
+      { key: 'cta', label: '行動喚起' },
+      { key: 'powerWord', label: '強いワード' }
+    ];
+
+    var html = '';
+    for (var i = 0; i < categories.length; i++) {
+      var cat = categories[i];
+      var value = s[cat.key] || '';
+      html += '<label>' + cat.label + '</label>';
+      html += '<textarea id="field_' + cat.key + '">' + escapeHtml(value) + '</textarea>';
     }
 
+    // Extras
+    if (s.extras && s.extras.length > 0) {
+      for (var j = 0; j < s.extras.length; j++) {
+        var extra = s.extras[j];
+        html += '<div class="extra-item">';
+        html += '<div class="extra-name">' + escapeHtml(extra.name) + '</div>';
+        html += '<textarea id="extra_' + j + '">' + escapeHtml(extra.value) + '</textarea>';
+        html += '<input type="hidden" id="extra_name_' + j + '" value="' + escapeHtml(extra.name) + '">';
+        html += '</div>';
+      }
+    }
+
+    container.innerHTML = html;
+  }
+
+  function collectStructure() {
+    var keys = ['hook', 'appeal', 'scarcity', 'cta', 'powerWord'];
+    var result = {};
+    for (var i = 0; i < keys.length; i++) {
+      var el = document.getElementById('field_' + keys[i]);
+      result[keys[i]] = el ? el.value.trim() : '';
+    }
+
+    // Collect extras
+    result.extras = [];
+    var j = 0;
+    while (document.getElementById('extra_' + j)) {
+      var name = document.getElementById('extra_name_' + j).value;
+      var value = document.getElementById('extra_' + j).value.trim();
+      if (name && value) {
+        result.extras.push({ name: name, value: value });
+      }
+      j++;
+    }
+
+    return result;
+  }
+
+  function handleGenerate() {
     var params = {
-      theme: theme,
-      target: document.getElementById('target').value.trim(),
-      tone: document.getElementById('tone').value,
+      structure: collectStructure(),
       additionalInstructions: document.getElementById('additionalInstructions').value.trim()
     };
 
     document.getElementById('btnGenerate').disabled = true;
-    document.getElementById('loading').style.display = 'flex';
-    document.getElementById('errorArea').textContent = '';
-    document.getElementById('resultArea').style.display = 'none';
+    document.getElementById('loading2').style.display = 'flex';
+    document.getElementById('error2').textContent = '';
 
     google.script.run
       .withSuccessHandler(onGenerateSuccess)
       .withFailureHandler(onGenerateError)
-      .generatePost(params);
+      .generateFromStructure(params);
   }
 
   function onGenerateSuccess(result) {
+    document.getElementById('loading2').style.display = 'none';
     document.getElementById('btnGenerate').disabled = false;
-    document.getElementById('loading').style.display = 'none';
 
     if (result.success) {
       document.getElementById('resultText').textContent = result.text;
-      document.getElementById('resultArea').style.display = 'block';
-      document.getElementById('errorArea').textContent = '';
+      document.getElementById('savedMsg').style.display = 'none';
+      document.getElementById('btnSave').disabled = false;
+      goToStep(3);
     } else {
-      document.getElementById('errorArea').textContent = 'エラー: ' + (result.error || '不明なエラー');
+      document.getElementById('error2').textContent = 'エラー: ' + (result.error || '不明なエラー');
     }
   }
 
   function onGenerateError(error) {
+    document.getElementById('loading2').style.display = 'none';
     document.getElementById('btnGenerate').disabled = false;
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('errorArea').textContent = 'エラー: ' + error.message;
+    document.getElementById('error2').textContent = 'エラー: ' + error.message;
   }
 
-  function handleClear() {
-    document.getElementById('theme').value = '';
-    document.getElementById('target').value = '';
-    document.getElementById('tone').selectedIndex = 0;
+  function handleSave() {
+    var text = document.getElementById('resultText').textContent;
+    document.getElementById('btnSave').disabled = true;
+    document.getElementById('error3').textContent = '';
+
+    google.script.run
+      .withSuccessHandler(function(result) {
+        if (result.success) {
+          document.getElementById('savedMsg').textContent = 'シートに保存しました';
+          document.getElementById('savedMsg').style.display = 'block';
+        } else {
+          document.getElementById('error3').textContent = '保存エラー: ' + (result.error || '');
+          document.getElementById('btnSave').disabled = false;
+        }
+      })
+      .withFailureHandler(function(error) {
+        document.getElementById('error3').textContent = '保存エラー: ' + error.message;
+        document.getElementById('btnSave').disabled = false;
+      })
+      .saveGeneratedPost(text);
+  }
+
+  function restart() {
+    structure = null;
     document.getElementById('additionalInstructions').value = '';
-    document.getElementById('resultArea').style.display = 'none';
-    document.getElementById('errorArea').textContent = '';
+    document.getElementById('savedMsg').style.display = 'none';
+    goToStep(1);
+  }
+
+  function goToStep(step) {
+    currentStep = step;
+    // Panels
+    for (var i = 1; i <= 3; i++) {
+      document.getElementById('panel' + i).className = 'panel' + (i === step ? ' active' : '');
+    }
+    // Dots
+    for (var j = 1; j <= 3; j++) {
+      var dot = document.getElementById('dot' + j);
+      dot.className = 'step-dot' + (j === step ? ' active' : (j < step ? ' done' : ''));
+    }
+    // Lines
+    document.getElementById('line1').className = 'step-line' + (step > 1 ? ' done' : '');
+    document.getElementById('line2').className = 'step-line' + (step > 2 ? ' done' : '');
   }
 
   function escapeHtml(text) {

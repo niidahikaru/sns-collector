@@ -1,93 +1,103 @@
 /**
- * 投稿文生成ロジック + 「生成した投稿」シート管理
+ * 投稿作成ウィザード — サーバー関数群
  */
 
 /**
- * 投稿文生成サイドバーを開く
+ * ウィザードサイドバーを開く
  */
-function openGenerationSidebar() {
+function openPostCreator() {
   var html = HtmlService.createHtmlOutputFromFile('sidebar')
-    .setTitle('投稿文を生成')
-    .setWidth(340);
+    .setTitle('投稿を作成')
+    .setWidth(360);
   SpreadsheetApp.getUi().showSidebar(html);
 }
 
 /**
- * 選択行の分析結果を取得（サイドバーから呼び出し）
- * @returns {Object|null} 分析データ or null
+ * 選択行の投稿本文といいね数を取得（Step 1 用）
+ * @returns {Object|null} { text, likes } or null
  */
-function getSelectedPostAnalysis() {
+function getSelectedPostText() {
   var sheet = SpreadsheetApp.getActiveSheet();
   var row = sheet.getActiveRange().getRow();
 
   if (row <= 1) return null;
 
-  var config = detectPlatformConfig(sheet);
-  var startCol = config.analysisStartColumn;
-  var statusCol = startCol + ANALYSIS_HEADERS.length - 1;
+  var text = sheet.getRange(row, 2).getValue(); // B列: 投稿内容
+  var likes = sheet.getRange(row, 3).getValue(); // C列: いいね数
 
-  // 状態を確認
-  var status = sheet.getRange(row, statusCol).getValue();
-  if (status !== '分析済') return null;
-
-  // 分析データを取得
-  var analysisValues = sheet.getRange(row, startCol, 1, 5).getValues()[0];
-  var likes = sheet.getRange(row, 3).getValue(); // C列 = いいね数
+  if (!text || text.toString().trim() === '') return null;
 
   return {
-    hook: analysisValues[0] || '',
-    problem: analysisValues[1] || '',
-    example: analysisValues[2] || '',
-    solution: analysisValues[3] || '',
-    cta: analysisValues[4] || '',
-    likes: likes ? likes.toString() : '',
-    summary: '「' + (analysisValues[0] || '') + '」→ ' +
-             (analysisValues[1] || '') + ' → ' +
-             (analysisValues[2] || '') + ' → ' +
-             (analysisValues[3] || '') + ' → ' +
-             (analysisValues[4] || '')
+    text: text.toString(),
+    likes: likes ? likes.toString() : ''
   };
 }
 
 /**
- * 投稿文を生成する（サイドバーから呼び出し）
- * @param {Object} params { theme, target, tone, additionalInstructions }
+ * 投稿の型をAIで分析する（Step 1 → Step 2）
+ * ハイブリッド型: 基本5カテゴリ + 該当しない要素は extras で追加
+ * @param {string} postText 投稿本文
+ * @returns {Object} { hook, appeal, scarcity, cta, powerWord, extras }
+ */
+function analyzePostStructure(postText) {
+  var prompt = '以下のSNS投稿を構造分析してください。必ずJSON形式のみで回答してください（説明文は不要）。\n\n' +
+    '基本カテゴリ（該当しない場合は空文字にしてください）:\n' +
+    '- hook: 冒頭フック（読者の注目を引く最初の1行）\n' +
+    '- appeal: 訴求・理想の未来（読者が得られるベネフィットや理想の状態）\n' +
+    '- scarcity: 限定性（ランキング、期間限定、数量限定など希少性を感じさせる要素）\n' +
+    '- cta: 行動喚起（いいね、コメント、保存、フォローなどを促す文）\n' +
+    '- powerWord: 強いワード（インパクトのある表現、オノマトペ、感情を動かすフレーズ）\n\n' +
+    '上記5カテゴリに当てはまらない重要な構成要素がある場合は、extras配列に追加してください。\n\n' +
+    '出力形式:\n' +
+    '{"hook": "", "appeal": "", "scarcity": "", "cta": "", "powerWord": "", "extras": [{"name": "要素名", "value": "内容"}]}\n\n' +
+    '投稿文:\n---\n' + postText + '\n---';
+
+  var responseText = callGemini(prompt);
+  var result = parseGeminiJson(responseText);
+
+  return {
+    hook: result.hook || '',
+    appeal: result.appeal || '',
+    scarcity: result.scarcity || '',
+    cta: result.cta || '',
+    powerWord: result.powerWord || '',
+    extras: result.extras || []
+  };
+}
+
+/**
+ * 構造 + 追加の指示から投稿を生成する（Step 2 → Step 3）
+ * @param {Object} params { structure, additionalInstructions }
  * @returns {Object} { success, text, error }
  */
-function generatePost(params) {
+function generateFromStructure(params) {
   try {
-    var analysis = getSelectedPostAnalysis();
+    var s = params.structure;
 
-    var prompt = '以下の条件でSNS投稿文を1つ生成してください。投稿文のみを出力し、説明や注釈は不要です。\n\n';
-    prompt += '【テーマ】' + params.theme + '\n';
+    var prompt = '以下の構造パターンを参考に、同じ構造だがオリジナルのSNS投稿文を1つ生成してください。\n' +
+      '投稿文のみを出力し、説明や注釈は不要です。パクリにならないよう表現は変えてください。\n\n' +
+      '【参考にする投稿構造】\n';
 
-    if (params.target) {
-      prompt += '【ターゲット】' + params.target + '\n';
-    }
+    if (s.hook) prompt += '- 冒頭フック: ' + s.hook + '\n';
+    if (s.appeal) prompt += '- 訴求（理想の未来）: ' + s.appeal + '\n';
+    if (s.scarcity) prompt += '- 限定性: ' + s.scarcity + '\n';
+    if (s.cta) prompt += '- 行動喚起: ' + s.cta + '\n';
+    if (s.powerWord) prompt += '- 強いワード: ' + s.powerWord + '\n';
 
-    prompt += '【トーン】' + params.tone + '\n';
-
-    if (analysis) {
-      prompt += '\n【参考にする投稿構造】\n';
-      prompt += '- フック: ' + analysis.hook + '\n';
-      prompt += '- 問題提起: ' + analysis.problem + '\n';
-      prompt += '- 具体例: ' + analysis.example + '\n';
-      prompt += '- 解決策: ' + analysis.solution + '\n';
-      prompt += '- CTA: ' + analysis.cta + '\n';
-      prompt += '\n上記の構造パターン（フック→問題提起→具体例→解決策→CTA）を参考に、テーマに合った新しい投稿文を生成してください。\n';
+    if (s.extras && s.extras.length > 0) {
+      for (var i = 0; i < s.extras.length; i++) {
+        var extra = s.extras[i];
+        if (extra.name && extra.value) {
+          prompt += '- ' + extra.name + ': ' + extra.value + '\n';
+        }
+      }
     }
 
     if (params.additionalInstructions) {
-      prompt += '\n【追加の指示】' + params.additionalInstructions + '\n';
+      prompt += '\n【追加の指示】\n' + params.additionalInstructions + '\n';
     }
 
     var generatedText = callGemini(prompt, 0.7);
-
-    // 「生成した投稿」シートに書き込み
-    var genSheet = getOrCreateGenerationSheet();
-    var newRow = genSheet.getLastRow() + 1;
-    var now = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy/MM/dd HH:mm');
-    genSheet.getRange(newRow, 1, 1, 3).setValues([[now, params.theme, generatedText]]);
 
     return { success: true, text: generatedText };
 
@@ -97,23 +107,32 @@ function generatePost(params) {
 }
 
 /**
- * 「生成した投稿」シートを取得 or 作成
- * @returns {Sheet}
+ * 生成した投稿をシートに保存する（Step 3）
+ * @param {string} text 生成された投稿文
+ * @returns {Object} { success }
  */
-function getOrCreateGenerationSheet() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheetName = '生成した投稿';
-  var sheet = ss.getSheetByName(sheetName);
+function saveGeneratedPost(text) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheetName = '生成した投稿';
+    var sheet = ss.getSheetByName(sheetName);
 
-  if (!sheet) {
-    sheet = ss.insertSheet(sheetName);
-    var headers = ['生成日時', 'テーマ', '生成された投稿文'];
-    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
-    sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
-    sheet.setColumnWidth(1, 150);
-    sheet.setColumnWidth(2, 150);
-    sheet.setColumnWidth(3, 600);
+    if (!sheet) {
+      sheet = ss.insertSheet(sheetName);
+      var headers = ['生成日時', '生成された投稿文'];
+      sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+      sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
+      sheet.setColumnWidth(1, 150);
+      sheet.setColumnWidth(2, 600);
+    }
+
+    var newRow = sheet.getLastRow() + 1;
+    var now = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy/MM/dd HH:mm');
+    sheet.getRange(newRow, 1, 1, 2).setValues([[now, text]]);
+
+    return { success: true };
+
+  } catch (e) {
+    return { success: false, error: e.message };
   }
-
-  return sheet;
 }

@@ -11,14 +11,11 @@
 
 // ── プラットフォーム別設定 ──
 
-var ANALYSIS_HEADERS = ["フック（1行目）", "問題提起", "具体例", "解決策", "CTA", "状態"];
-
 var PLATFORM_CONFIG = {
   threads: {
     headers: ["投稿日時", "投稿内容", "いいね数", "インプ数", "画像の有無", "投稿ID", "投稿URL"],
     postIdColumn: 6,
-    analysisStartColumn: 8,
-    columnWidths: { 1: 150, 2: 400, 3: 80, 4: 80, 5: 80, 6: 120, 7: 300, 8: 150, 9: 150, 10: 150, 11: 150, 12: 120, 13: 80 },
+    columnWidths: { 1: 150, 2: 400, 3: 80, 4: 80, 5: 80, 6: 120, 7: 300 },
     buildUrl: function(username, postId) {
       return "https://www.threads.net/@" + username + "/post/" + postId;
     },
@@ -37,8 +34,7 @@ var PLATFORM_CONFIG = {
   x: {
     headers: ["投稿日時", "投稿内容", "いいね数", "RT数", "リプライ数", "引用RT数", "ブックマーク数", "インプ数", "画像の有無", "投稿ID", "投稿URL"],
     postIdColumn: 10,
-    analysisStartColumn: 12,
-    columnWidths: { 1: 150, 2: 400, 3: 80, 4: 80, 5: 80, 6: 80, 7: 80, 8: 80, 9: 80, 10: 120, 11: 300, 12: 150, 13: 150, 14: 150, 15: 150, 16: 120, 17: 80 },
+    columnWidths: { 1: 150, 2: 400, 3: 80, 4: 80, 5: 80, 6: 80, 7: 80, 8: 80, 9: 80, 10: 120, 11: 300 },
     buildUrl: function(username, postId) {
       return "https://x.com/" + username + "/status/" + postId;
     },
@@ -125,10 +121,8 @@ function processData(data) {
 
     if (!sheet) {
       sheet = ss.insertSheet(account);
-      // 基本ヘッダー + 分析用ヘッダーを一括書き込み
-      var allHeaders = config.headers.concat(ANALYSIS_HEADERS);
-      sheet.getRange(1, 1, 1, allHeaders.length).setValues([allHeaders]);
-      sheet.getRange(1, 1, 1, allHeaders.length).setFontWeight("bold");
+      sheet.getRange(1, 1, 1, config.headers.length).setValues([config.headers]);
+      sheet.getRange(1, 1, 1, config.headers.length).setFontWeight("bold");
       sheet.getRange("A:A").setNumberFormat("@");
       var widths = config.columnWidths;
       for (var col in widths) {
@@ -137,7 +131,7 @@ function processData(data) {
       ss.setActiveSheet(sheet);
       ss.moveActiveSheet(1);
     } else {
-      ensureHeaders(sheet, config.headers.concat(ANALYSIS_HEADERS));
+      ensureHeaders(sheet, config.headers);
     }
 
     // ── シートから既存postIdを読み取り（source of truth）──
@@ -162,14 +156,6 @@ function processData(data) {
     if (newRows.length > 0) {
       var startRow = sheet.getLastRow() + 1;
       sheet.getRange(startRow, 1, newRows.length, config.headers.length).setValues(newRows);
-
-      // 状態列に「未分析」をセット
-      var statusCol = config.analysisStartColumn + ANALYSIS_HEADERS.length - 1;
-      var statusValues = [];
-      for (var j = 0; j < newRows.length; j++) {
-        statusValues.push(["未分析"]);
-      }
-      sheet.getRange(startRow, statusCol, newRows.length, 1).setValues(statusValues);
     }
 
     var totalRows = sheet.getLastRow() - 1;
