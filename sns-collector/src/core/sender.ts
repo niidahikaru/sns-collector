@@ -99,6 +99,7 @@ export class Sender {
       datetime: post.datetime ? this.formatDatetime(post.datetime) : '',
       text: post.text || '',
       likes: this.formatMetric(post.likes),
+      replies: this.formatMetric(post.replies),
       views: this.formatMetric(post.views),
       hasImage: post.hasMedia ? 'あり' : 'なし',
       postUrl: post.postUrl,
@@ -106,7 +107,6 @@ export class Sender {
 
     if (this.platform === 'x') {
       base.retweets = this.formatMetric(post.retweets);
-      base.replies = this.formatMetric(post.replies);
       base.bookmarks = this.formatMetric(post.bookmarks);
     }
 

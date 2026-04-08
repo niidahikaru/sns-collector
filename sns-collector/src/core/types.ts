@@ -13,12 +13,12 @@ export interface RawPost {
   datetime: string | null;
   text: string | null;          // null for image-only posts
   likes: MetricValue;
+  replies: MetricValue;
   views: MetricValue;
   hasMedia: boolean;
   postUrl: string;
   // X-specific (undefined for Threads)
   retweets?: MetricValue;
-  replies?: MetricValue;
   bookmarks?: MetricValue;
 }
 
@@ -38,12 +38,12 @@ export interface GasPost {
   datetime: string;
   text: string;
   likes: string;
+  replies: string;
   views: string;
   hasImage: string;       // "あり" / "なし"
   postUrl: string;
   // X-specific
   retweets?: string;
-  replies?: string;
   bookmarks?: string;
 }
 

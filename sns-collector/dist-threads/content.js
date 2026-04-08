@@ -146,6 +146,7 @@
         datetime: rawDatetime,
         text,
         likes: metrics.likes,
+        replies: metrics.replies,
         views: metrics.views,
         hasMedia,
         postUrl
@@ -227,9 +228,11 @@
     }
     extractMetrics(el) {
       const likes = this.extractMetricByLabel(el, THREADS_METRIC_LABELS.like);
-      if (likes !== null) {
+      const replies = this.extractMetricByLabel(el, THREADS_METRIC_LABELS.reply);
+      if (likes !== null || replies !== null) {
         return {
-          likes: parseMetricText(likes),
+          likes: parseMetricText(likes || ""),
+          replies: parseMetricText(replies || ""),
           views: parseMetricText("")
         };
       }
@@ -270,6 +273,7 @@
       }
       return {
         likes: parseMetricText(trailingNumbers.length >= 1 ? trailingNumbers[0] : "0"),
+        replies: parseMetricText("0"),
         views: parseMetricText(trailingNumbers.length >= 2 ? trailingNumbers[1] : "")
       };
     }
@@ -384,11 +388,11 @@
         datetime: rawDatetime,
         text,
         likes: metrics.likes,
+        replies: metrics.replies,
         views: metrics.views,
         hasMedia,
         postUrl,
         retweets: metrics.retweets,
-        replies: metrics.replies,
         bookmarks: metrics.bookmarks
       };
     }
@@ -715,13 +719,13 @@
         datetime: post.datetime ? this.formatDatetime(post.datetime) : "",
         text: post.text || "",
         likes: this.formatMetric(post.likes),
+        replies: this.formatMetric(post.replies),
         views: this.formatMetric(post.views),
         hasImage: post.hasMedia ? "\u3042\u308A" : "\u306A\u3057",
         postUrl: post.postUrl
       };
       if (this.platform === "x") {
         base.retweets = this.formatMetric(post.retweets);
-        base.replies = this.formatMetric(post.replies);
         base.bookmarks = this.formatMetric(post.bookmarks);
       }
       return base;
