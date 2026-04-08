@@ -57,11 +57,11 @@ export class XAdapter implements PostAdapter {
       datetime: rawDatetime,
       text,
       likes: metrics.likes,
+      replies: metrics.replies,
       views: metrics.views,
       hasMedia,
       postUrl,
       retweets: metrics.retweets,
-      replies: metrics.replies,
       bookmarks: metrics.bookmarks,
     };
   }

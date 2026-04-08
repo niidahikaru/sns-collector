@@ -53,6 +53,7 @@ export class ThreadsAdapter implements PostAdapter {
       datetime: rawDatetime,
       text,
       likes: metrics.likes,
+      replies: metrics.replies,
       views: metrics.views,
       hasMedia,
       postUrl,
@@ -135,12 +136,14 @@ export class ThreadsAdapter implements PostAdapter {
     return textParts.length > 0 ? textParts.join('\n') : null;
   }
 
-  private extractMetrics(el: Element): { likes: MetricValue; views: MetricValue } {
-    // Primary: extract likes from SVG aria-label anchor
+  private extractMetrics(el: Element): { likes: MetricValue; replies: MetricValue; views: MetricValue } {
+    // Primary: extract likes and replies from SVG aria-label anchor
     const likes = this.extractMetricByLabel(el, THREADS_METRIC_LABELS.like);
-    if (likes !== null) {
+    const replies = this.extractMetricByLabel(el, THREADS_METRIC_LABELS.reply);
+    if (likes !== null || replies !== null) {
       return {
-        likes: parseMetricText(likes),
+        likes: parseMetricText(likes || ''),
+        replies: parseMetricText(replies || ''),
         views: parseMetricText(''),
       };
     }
@@ -168,7 +171,7 @@ export class ThreadsAdapter implements PostAdapter {
     return null;
   }
 
-  private extractMetricsFallback(el: Element): { likes: MetricValue; views: MetricValue } {
+  private extractMetricsFallback(el: Element): { likes: MetricValue; replies: MetricValue; views: MetricValue } {
     const lines = ((el as HTMLElement).innerText ?? el.textContent ?? '').split('\n').filter((l) => l.trim() !== '');
     const trailingNumbers: string[] = [];
 
@@ -186,6 +189,7 @@ export class ThreadsAdapter implements PostAdapter {
 
     return {
       likes: parseMetricText(trailingNumbers.length >= 1 ? trailingNumbers[0]! : '0'),
+      replies: parseMetricText('0'),
       views: parseMetricText(trailingNumbers.length >= 2 ? trailingNumbers[1]! : ''),
     };
   }

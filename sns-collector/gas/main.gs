@@ -13,9 +13,9 @@
 
 var PLATFORM_CONFIG = {
   threads: {
-    headers: ["投稿日時", "投稿内容", "いいね数", "インプ数", "画像の有無", "投稿ID", "投稿URL"],
-    postIdColumn: 6,
-    columnWidths: { 1: 150, 2: 400, 3: 80, 4: 80, 5: 80, 6: 120, 7: 300 },
+    headers: ["投稿日時", "投稿内容", "いいね数", "コメント数", "インプ数", "画像の有無", "投稿ID", "投稿URL"],
+    postIdColumn: 7,
+    columnWidths: { 1: 150, 2: 400, 3: 80, 4: 80, 5: 80, 6: 80, 7: 120, 8: 300 },
     buildUrl: function(username, postId) {
       return "https://www.threads.net/@" + username + "/post/" + postId;
     },
@@ -24,6 +24,7 @@ var PLATFORM_CONFIG = {
         post.datetime || "",
         post.text || "",
         post.likes || "0",
+        post.replies || "0",
         post.views || "—",
         post.hasImage || "なし",
         postId,
@@ -32,7 +33,7 @@ var PLATFORM_CONFIG = {
     }
   },
   x: {
-    headers: ["投稿日時", "投稿内容", "いいね数", "RT数", "リプライ数", "引用RT数", "ブックマーク数", "インプ数", "画像の有無", "投稿ID", "投稿URL"],
+    headers: ["投稿日時", "投稿内容", "いいね数", "コメント数", "RT数", "引用RT数", "ブックマーク数", "インプ数", "画像の有無", "投稿ID", "投稿URL"],
     postIdColumn: 10,
     columnWidths: { 1: 150, 2: 400, 3: 80, 4: 80, 5: 80, 6: 80, 7: 80, 8: 80, 9: 80, 10: 120, 11: 300 },
     buildUrl: function(username, postId) {
@@ -43,8 +44,8 @@ var PLATFORM_CONFIG = {
         post.datetime || "",
         post.text || "",
         post.likes || "0",
-        post.retweets || "0",
         post.replies || "0",
+        post.retweets || "0",
         "—",                          // 引用RT数（DOM上で分離不可のため「—」）
         post.bookmarks || "0",
         post.views || "0",
