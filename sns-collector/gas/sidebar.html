@@ -93,17 +93,68 @@
   textarea:focus { border-color: #1a73e8; }
   textarea.instruction { min-height: 60px; }
 
-  .extra-item {
-    margin-top: 10px;
-    padding: 8px;
-    background: #fef7e0;
+  select {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #dadce0;
     border-radius: 6px;
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    background: #fff;
   }
-  .extra-name {
-    font-size: 11px;
-    font-weight: 600;
-    color: #b06000;
+  select:focus { border-color: #1a73e8; }
+
+  /* Checkbox list (power words) */
+  .checkbox-list {
+    margin-top: 4px;
+  }
+  .checkbox-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 6px 8px;
+    border: 1px solid #e8eaed;
+    border-radius: 6px;
     margin-bottom: 4px;
+    cursor: pointer;
+  }
+  .checkbox-item:hover { background: #f8f9fa; }
+  .checkbox-item input[type="checkbox"] {
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+  .checkbox-item span {
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  /* Stock section */
+  .stock-section {
+    margin-top: 16px;
+    padding: 12px;
+    background: #f0f7ff;
+    border: 1px solid #c2deff;
+    border-radius: 8px;
+  }
+  .stock-section-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1a73e8;
+    margin-bottom: 8px;
+  }
+  .stock-item {
+    margin-top: 8px;
+  }
+  .stock-item label {
+    margin-top: 0;
+    color: #1a73e8;
+  }
+  .stock-empty {
+    color: #999;
+    font-size: 12px;
+    font-style: italic;
+    padding: 8px 0;
   }
 
   /* Buttons */
@@ -186,10 +237,16 @@
   <div class="step-dot" id="dot3">3</div>
 </div>
 
-<!-- Step 1: Select post -->
+<!-- Step 1: Select post & analyze -->
 <div class="panel active" id="panel1">
   <div class="step-title">ベースの型を選ぶ</div>
-  <div id="postPreviewArea"></div>
+  <div id="postPreviewArea">
+    <div class="loading" style="display:flex;padding:20px 0;">
+      <div class="spinner"></div>
+      投稿を読み込み中...
+    </div>
+  </div>
+
   <div class="btn-row">
     <button class="btn btn-primary" id="btnAnalyze" onclick="handleAnalyze()">型を分析する</button>
   </div>
@@ -200,13 +257,26 @@
   <div id="error1" class="error-text"></div>
 </div>
 
-<!-- Step 2: Review structure & generate -->
+<!-- Step 2: Review structure + save to stock + select stock + generate -->
 <div class="panel" id="panel2">
-  <div class="step-title">構造を確認・編集</div>
+  <div class="step-title">構造を確認・素材を選ぶ</div>
+
   <div id="structureFields"></div>
 
+  <!-- Save to stock -->
+  <div class="btn-row">
+    <button class="btn btn-success" id="btnSaveStock" onclick="handleSaveStock()" style="font-size:12px;">ストックに保存</button>
+  </div>
+  <div id="stockSavedMsg" class="saved-text" style="display:none;"></div>
+
+  <!-- Stock selection -->
+  <div class="stock-section" id="stockSection">
+    <div class="stock-section-title">ストックから素材を選ぶ（任意）</div>
+    <div id="stockFields"></div>
+  </div>
+
   <label style="margin-top:16px;">追加の指示（任意）</label>
-  <textarea id="additionalInstructions" class="instruction" placeholder="例: 占いジャンルで書きたい、絵文字を多めに、500文字以内で"></textarea>
+  <textarea id="additionalInstructions" class="instruction" placeholder="例: 絵文字を多めに、500文字以内で"></textarea>
 
   <div class="btn-row">
     <button class="btn btn-secondary" onclick="goToStep(1)">戻る</button>
@@ -237,7 +307,10 @@
 <script>
   var currentStep = 1;
   var postText = '';
+  var postLikes = '';
+  var postId = '';
   var structure = null;
+  var stockData = {};    // { "一文目": [{content, likes, postId}, ...], ... }
 
   // Init: load selected post
   google.script.run
@@ -249,6 +322,8 @@
     var area = document.getElementById('postPreviewArea');
     if (data && data.text) {
       postText = data.text;
+      postLikes = data.likes || '';
+      postId = data.postId || '';
       area.innerHTML =
         '<div class="post-preview">' + escapeHtml(data.text) + '</div>' +
         (data.likes ? '<div class="post-meta">いいね ' + escapeHtml(data.likes) + '</div>' : '');
@@ -261,6 +336,7 @@
 
   function handleAnalyze() {
     if (!postText) return;
+
     document.getElementById('btnAnalyze').disabled = true;
     document.getElementById('loading1').style.display = 'flex';
     document.getElementById('error1').textContent = '';
@@ -268,14 +344,18 @@
     google.script.run
       .withSuccessHandler(onAnalyzeSuccess)
       .withFailureHandler(onAnalyzeError)
-      .analyzePostStructure(postText);
+      .analyzePost(postText);
   }
 
   function onAnalyzeSuccess(result) {
     document.getElementById('loading1').style.display = 'none';
     document.getElementById('btnAnalyze').disabled = false;
-    structure = result;
-    renderStructureFields(result);
+
+    structure = result.structure;
+    stockData = result.stock || {};
+
+    renderStructureFields(structure);
+    renderStockFields();
     goToStep(2);
   }
 
@@ -287,15 +367,16 @@
 
   function renderStructureFields(s) {
     var container = document.getElementById('structureFields');
+    var html = '';
+
+    // 5カテゴリ（テキストエリア）
     var categories = [
       { key: 'hook', label: '冒頭フック' },
       { key: 'appeal', label: '訴求（理想の未来）' },
       { key: 'scarcity', label: '限定性' },
-      { key: 'cta', label: '行動喚起' },
-      { key: 'powerWord', label: '強いワード' }
+      { key: 'cta', label: '行動喚起' }
     ];
 
-    var html = '';
     for (var i = 0; i < categories.length; i++) {
       var cat = categories[i];
       var value = s[cat.key] || '';
@@ -303,28 +384,124 @@
       html += '<textarea id="field_' + cat.key + '">' + escapeHtml(value) + '</textarea>';
     }
 
+    // 強ワード（チェックボックス）
+    html += '<label>強いワード（ストック保存するものを選択）</label>';
+    var words = s.powerWords || [];
+    if (words.length > 0) {
+      html += '<div class="checkbox-list" id="powerWordsList">';
+      for (var j = 0; j < words.length; j++) {
+        html += '<label class="checkbox-item">';
+        html += '<input type="checkbox" name="powerWord" value="' + escapeHtml(words[j]) + '" checked>';
+        html += '<span>' + escapeHtml(words[j]) + '</span>';
+        html += '</label>';
+      }
+      html += '</div>';
+    } else {
+      html += '<div class="stock-empty">強ワードが検出されませんでした</div>';
+    }
+
     // Extras
     if (s.extras && s.extras.length > 0) {
-      for (var j = 0; j < s.extras.length; j++) {
-        var extra = s.extras[j];
-        html += '<div class="extra-item">';
-        html += '<div class="extra-name">' + escapeHtml(extra.name) + '</div>';
-        html += '<textarea id="extra_' + j + '">' + escapeHtml(extra.value) + '</textarea>';
-        html += '<input type="hidden" id="extra_name_' + j + '" value="' + escapeHtml(extra.name) + '">';
-        html += '</div>';
+      for (var k = 0; k < s.extras.length; k++) {
+        var extra = s.extras[k];
+        html += '<label>' + escapeHtml(extra.name) + '</label>';
+        html += '<textarea id="extra_' + k + '">' + escapeHtml(extra.value) + '</textarea>';
+        html += '<input type="hidden" id="extra_name_' + k + '" value="' + escapeHtml(extra.name) + '">';
       }
+    }
+
+    container.innerHTML = html;
+
+    // Reset save button
+    document.getElementById('btnSaveStock').disabled = false;
+    document.getElementById('stockSavedMsg').style.display = 'none';
+  }
+
+  function getCheckedPowerWords() {
+    var checkboxes = document.querySelectorAll('input[name="powerWord"]:checked');
+    var words = [];
+    for (var i = 0; i < checkboxes.length; i++) {
+      words.push(checkboxes[i].value);
+    }
+    return words;
+  }
+
+  function handleSaveStock() {
+    var btn = document.getElementById('btnSaveStock');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner" style="width:12px;height:12px;display:inline-block;vertical-align:middle;margin-right:6px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;"></span>保存中...';
+    document.getElementById('stockSavedMsg').style.display = 'none';
+
+    var params = {
+      hook: document.getElementById('field_hook').value.trim(),
+      powerWords: getCheckedPowerWords(),
+      appeal: document.getElementById('field_appeal').value.trim(),
+      likes: postLikes,
+      postId: postId
+    };
+
+    google.script.run
+      .withSuccessHandler(function(result) {
+        var btn = document.getElementById('btnSaveStock');
+        btn.textContent = 'ストックに保存';
+        if (result.success) {
+          var msg = result.count > 0 ? result.count + '件をストックに保存しました' : 'この投稿は既にストック済みです';
+          document.getElementById('stockSavedMsg').textContent = msg;
+          document.getElementById('stockSavedMsg').style.display = 'block';
+          stockData = result.stock || {};
+          renderStockFields();
+        } else {
+          document.getElementById('stockSavedMsg').style.display = 'none';
+          btn.disabled = false;
+        }
+      })
+      .withFailureHandler(function() {
+        var btn = document.getElementById('btnSaveStock');
+        btn.textContent = 'ストックに保存';
+        btn.disabled = false;
+      })
+      .saveSelectedToStock(params);
+  }
+
+  function renderStockFields() {
+    var container = document.getElementById('stockFields');
+    var types = Object.keys(stockData);
+
+    if (types.length === 0) {
+      container.innerHTML = '<div class="stock-empty">まだストックがありません</div>';
+      return;
+    }
+
+    var html = '';
+    for (var i = 0; i < types.length; i++) {
+      var type = types[i];
+      var items = stockData[type];
+      html += '<div class="stock-item">';
+      html += '<label>' + escapeHtml(type) + '</label>';
+      html += '<select id="stock_' + i + '" data-type="' + escapeHtml(type) + '">';
+      html += '<option value="">-- 選択しない --</option>';
+      for (var j = 0; j < items.length; j++) {
+        var item = items[j];
+        var display = item.content;
+        if (display.length > 50) display = display.substring(0, 50) + '...';
+        if (item.likes) display += ' (いいね' + item.likes + ')';
+        html += '<option value="' + escapeHtml(item.content) + '">' + escapeHtml(display) + '</option>';
+      }
+      html += '</select>';
+      html += '</div>';
     }
 
     container.innerHTML = html;
   }
 
   function collectStructure() {
-    var keys = ['hook', 'appeal', 'scarcity', 'cta', 'powerWord'];
+    var keys = ['hook', 'appeal', 'scarcity', 'cta'];
     var result = {};
     for (var i = 0; i < keys.length; i++) {
       var el = document.getElementById('field_' + keys[i]);
       result[keys[i]] = el ? el.value.trim() : '';
     }
+    result.powerWords = getCheckedPowerWords();
 
     // Collect extras
     result.extras = [];
@@ -341,9 +518,46 @@
     return result;
   }
 
+  function collectStockElements() {
+    var elements = [];
+    var types = Object.keys(stockData);
+    for (var i = 0; i < types.length; i++) {
+      var sel = document.getElementById('stock_' + i);
+      if (sel && sel.value) {
+        elements.push({
+          type: sel.getAttribute('data-type'),
+          content: sel.value
+        });
+      }
+    }
+    return elements;
+  }
+
+  function getUnselectedStock() {
+    // 選択されていない要素タイプの全候補を返す
+    var selected = {};
+    var types = Object.keys(stockData);
+    for (var i = 0; i < types.length; i++) {
+      var sel = document.getElementById('stock_' + i);
+      if (sel && sel.value) {
+        selected[sel.getAttribute('data-type')] = true;
+      }
+    }
+    var unselected = {};
+    for (var j = 0; j < types.length; j++) {
+      var type = types[j];
+      if (!selected[type]) {
+        unselected[type] = stockData[type].map(function(item) { return item.content; });
+      }
+    }
+    return unselected;
+  }
+
   function handleGenerate() {
     var params = {
       structure: collectStructure(),
+      stockElements: collectStockElements(),
+      unselectedStock: getUnselectedStock(),
       additionalInstructions: document.getElementById('additionalInstructions').value.trim()
     };
 
@@ -401,6 +615,7 @@
 
   function restart() {
     structure = null;
+    stockData = {};
     document.getElementById('additionalInstructions').value = '';
     document.getElementById('savedMsg').style.display = 'none';
     goToStep(1);
@@ -408,16 +623,13 @@
 
   function goToStep(step) {
     currentStep = step;
-    // Panels
     for (var i = 1; i <= 3; i++) {
       document.getElementById('panel' + i).className = 'panel' + (i === step ? ' active' : '');
     }
-    // Dots
     for (var j = 1; j <= 3; j++) {
       var dot = document.getElementById('dot' + j);
       dot.className = 'step-dot' + (j === step ? ' active' : (j < step ? ' done' : ''));
     }
-    // Lines
     document.getElementById('line1').className = 'step-line' + (step > 1 ? ' done' : '');
     document.getElementById('line2').className = 'step-line' + (step > 2 ? ' done' : '');
   }
