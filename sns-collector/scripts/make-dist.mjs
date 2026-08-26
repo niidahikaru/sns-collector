@@ -6,11 +6,11 @@
  * sns-collector-dist/ を作成し、以下をまとめる:
  * - x/extension/        ... X用ビルド済みChrome拡張
  * - threads/extension/  ... Threads用ビルド済みChrome拡張
- * - gas/                ... GASコード
- * - setup.mjs           ... セットアップスクリプト
- * - セットアップ手順書.txt
  *
  * 最後に sns-collector-dist.zip を生成。
+ *
+ * GAS コードは配布物に含めない。利用者はスプレッドシートをコピーし、
+ * シートの「初期設定」→「セットアップ」からデプロイする (analysis.gs)。
  */
 
 import {

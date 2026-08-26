@@ -1,5 +1,7 @@
 node_modules/
 dist/
+dist-x/
+dist-threads/
 sns-collector-dist/
 *.zip
 .DS_Store
