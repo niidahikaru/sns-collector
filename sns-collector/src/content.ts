@@ -5,6 +5,12 @@ import { Collector } from './core/collector';
 import { setLogPlatform, log } from './core/logger';
 import type { CollectionState } from './core/types';
 
+declare global {
+  interface Window {
+    __snsCollectorInjected?: boolean;
+  }
+}
+
 // Register adapters
 registerAdapter('threads', () => new ThreadsAdapter());
 registerAdapter('x', () => new XAdapter());
@@ -12,7 +18,10 @@ registerAdapter('x', () => new XAdapter());
 // Detect platform
 const platform = detectPlatform();
 
-if (platform) {
+// Guard against double injection: the manifest injects this on navigation, and the
+// popup re-injects it on demand when a stale tab has no listener. Run setup only once.
+if (platform && !window.__snsCollectorInjected) {
+  window.__snsCollectorInjected = true;
   setLogPlatform(platform);
   const adapter = getAdapter(platform)!;
 

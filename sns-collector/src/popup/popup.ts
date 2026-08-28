@@ -100,6 +100,12 @@ document.addEventListener('DOMContentLoaded', () => {
         setStatus('ヘルスチェック失敗', 'status-error');
         healthAlert.textContent = (response.errors as string[]).join('\n');
         healthAlert.style.display = 'block';
+      } else {
+        setStatus('ページと通信できませんでした', 'status-error');
+        healthAlert.textContent =
+          '収集対象アカウントの「プロフィールページ」（例: https://www.threads.com/@ユーザー名）を開き、' +
+          'ページを再読み込みしてからもう一度お試しください。';
+        healthAlert.style.display = 'block';
       }
     });
   });
@@ -175,6 +181,32 @@ document.addEventListener('DOMContentLoaded', () => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       const tabId = tabs[0]?.id;
       if (!tabId) {
+        callback(undefined);
+        return;
+      }
+      chrome.tabs.sendMessage(tabId, message, (response) => {
+        if (chrome.runtime.lastError) {
+          // No content script in this tab (extension updated / tab opened before install).
+          // Inject it on demand, then retry once.
+          injectAndRetry(tabId, message, callback);
+          return;
+        }
+        callback(response as Record<string, unknown> | undefined);
+      });
+    });
+  }
+
+  function injectAndRetry(
+    tabId: number,
+    message: Record<string, unknown>,
+    callback: (response: Record<string, unknown> | undefined) => void,
+  ): void {
+    if (!chrome.scripting?.executeScript) {
+      callback(undefined);
+      return;
+    }
+    chrome.scripting.executeScript({ target: { tabId }, files: ['content.js'] }, () => {
+      if (chrome.runtime.lastError) {
         callback(undefined);
         return;
       }
