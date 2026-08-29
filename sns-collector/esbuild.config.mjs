@@ -62,7 +62,7 @@ const manifest = {
   name: manifestName,
   version: '2.0.0',
   description: 'Threads / X の投稿を収集してGoogle スプレッドシートに送信',
-  permissions: ['activeTab', 'storage'],
+  permissions: ['activeTab', 'storage', 'scripting'],
   host_permissions: ['https://script.google.com/*'],
   background: {
     service_worker: 'background.js',
